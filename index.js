@@ -27,17 +27,9 @@ const exerciseSchema = new mongoose.Schema({
   username: String,
   description: String,
   duration: Number,
-  date: Date,
+  date: String,
 });
 let Exercise = mongoose.model('Exercise', exerciseSchema);
-
-//  Log Schema, Model
-const logSchema = new mongoose.Schema({
-  description: String,
-  duration: Number,
-  date: Date,
-});
-let Log = mongoose.model('Log', logSchema);
 
 app.use(bodyParser.urlencoded({ extended: 'false' }));
 app.use(bodyParser.json());
@@ -78,17 +70,25 @@ app.get('/api/users', (req, res) => {
 app.post('/api/users/:_id/exercises', (req, res) => {
   let userId = req.params.id;
 
-  User.findOne({ _id: userId })
+  User.findOne(userId)
     .then((user) => {
-      let newDate =
+      let date =
         new Date(req.body.date) !== 'Invalid Date' && req.body.date
           ? new Date(req.body.date)
           : new Date();
+      let options = {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }; // specify the format options
+      let formattedDate = date.toLocaleDateString('en-US', options); // get the formatted date string
+      console.log(formattedDate); // output: Sat Jul 3 2021
       let newExercise = new Exercise({
         username: user.username,
         description: req.body.description,
         duration: req.body.duration,
-        date: newDate,
+        date: formattedDate.toString().replace(',', ''),
       });
       console.log(req.body, new Date(req.body.date));
 
@@ -107,12 +107,29 @@ app.post('/api/users/:_id/exercises', (req, res) => {
 });
 
 //  Get User logs
+//  optional query params /logs?from=2011-03-23&to=2011-03-26&limit=2
 app.get('/api/users/:_id/logs', (req, res) => {
   let userId = req.params.id;
-  User.findOne({ _id: userId }).then((user) => {
-    Exercise.find({ _id: req.params.id })
+  let query = {};
+  if (req.query.from && req.query.to) {
+    // yyyy-mm-dd
+    let startDate = new Date(req.query.from);
+    let endDate = new Date(req.query.to);
+    query.date = { $gte: startDate, $lte: endDate };
+  }
+
+  User.findOne(userId).then((user) => {
+    Exercise.find({ username: user.username, ...query })
+      .limit(req.query.limit || null)
       .then((result) => {
-        res.send({ message: 'List of user orders', data: result });
+        let newResult = {
+          username: user.username,
+          count: result.length,
+          _id: user._id,
+          log: result,
+        };
+
+        res.send(newResult);
       })
       .catch((err) => {
         res.send(err);
