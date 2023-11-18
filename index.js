@@ -34,7 +34,7 @@ let Exercise = mongoose.model('Exercise', exerciseSchema);
 app.use(bodyParser.urlencoded({ extended: 'false' }));
 app.use(bodyParser.json());
 app.use(cors());
-app.use(express.static('public'));
+app.use('/public', express.static(__dirname + '/public'));
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/views/index.html');
 });
