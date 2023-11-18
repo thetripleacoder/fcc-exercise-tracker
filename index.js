@@ -77,19 +77,19 @@ app.post('/api/users/:_id/exercises', (req, res) => {
         new Date(req.body.date) !== 'Invalid Date' && req.body.date
           ? new Date(req.body.date)
           : new Date();
-      let options = {
-        weekday: 'short',
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      }; // specify the format options
-      let formattedDate = date.toLocaleDateString('en-US', options); // get the formatted date string
-      console.log(formattedDate); // output: Sat Jul 3 2021
+      // let options = {
+      //   weekday: 'short',
+      //   year: 'numeric',
+      //   month: 'short',
+      //   day: 'numeric',
+      // }; // specify the format options
+      // let formattedDate = date.toLocaleDateString('en-US', options); // get the formatted date string
+      // console.log(formattedDate); // output: Sat Jul 3 2021
       let newExercise = new Exercise({
         username: user.username,
         description: req.body.description,
         duration: req.body.duration,
-        date: formattedDate.toString().replace(',', ''),
+        date: date.toDateString(),
       });
 
       newExercise
