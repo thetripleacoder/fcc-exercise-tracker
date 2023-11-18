@@ -68,10 +68,11 @@ app.get('/api/users', (req, res) => {
 
 // Create exercise to a User
 app.post('/api/users/:_id/exercises', (req, res) => {
-  let userId = req.params.id;
+  let userId = req.params._id;
 
-  User.findOne(userId)
+  User.findOne({ _id: userId })
     .then((user) => {
+      console.log(user, userId);
       let date =
         new Date(req.body.date) !== 'Invalid Date' && req.body.date
           ? new Date(req.body.date)
@@ -108,7 +109,7 @@ app.post('/api/users/:_id/exercises', (req, res) => {
 //  Get User logs
 //  optional query params /logs?from=2011-03-23&to=2011-03-26&limit=2
 app.get('/api/users/:_id/logs', (req, res) => {
-  let userId = req.params.id;
+  let userId = req.params._id;
   let query = {};
   if (req.query.from && req.query.to) {
     // yyyy-mm-dd
@@ -117,15 +118,15 @@ app.get('/api/users/:_id/logs', (req, res) => {
     query.date = { $gte: startDate, $lte: endDate };
   }
 
-  User.findOne(userId).then((user) => {
-    Exercise.find({ username: user.username, ...query })
+  User.findOne({ _id: userId }).then((user) => {
+    Exercise.find(Object.assign({ username: user.username }, query))
       .limit(req.query.limit || null)
       .select('description duration date -_id')
       .then((result) => {
         let newResult = {
           username: user.username,
-          count: result.length,
           _id: user._id,
+          count: result.length,
           log: result,
         };
 
