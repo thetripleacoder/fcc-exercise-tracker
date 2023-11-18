@@ -90,12 +90,11 @@ app.post('/api/users/:_id/exercises', (req, res) => {
         duration: req.body.duration,
         date: formattedDate.toString().replace(',', ''),
       });
-      console.log(req.body, new Date(req.body.date));
 
       newExercise
         .save()
         .then((exercise) => {
-          res.send(exercise);
+          res.send(Object.assign(exercise, { _id: user._id }));
         })
         .catch((err) => {
           res.send(err);
@@ -121,6 +120,7 @@ app.get('/api/users/:_id/logs', (req, res) => {
   User.findOne(userId).then((user) => {
     Exercise.find({ username: user.username, ...query })
       .limit(req.query.limit || null)
+      .select('description duration date -_id')
       .then((result) => {
         let newResult = {
           username: user.username,
